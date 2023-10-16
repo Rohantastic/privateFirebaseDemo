@@ -10,6 +10,8 @@ const AuthForm = () => {
 
   const [isLogin, setIsLogin] = useState(true);
 
+  const [isLoading,setIsLoading] = useState(false);
+
   const switchAuthModeHandler = () => {
     setIsLogin((prevState) => !prevState);
   };
@@ -20,10 +22,14 @@ const AuthForm = () => {
     const enteredEmail = emailInputRef.current.value;
     const enteredPassword = passwordInputRef.current.value;
 
+    setIsLoading(true);
+    let url;
     if (isLogin) {
-
+      url = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyD3QXuWLXotdtPsh5kedc-Bo3j283kD6T8'
     } else {
-      fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyD3QXuWLXotdtPsh5kedc-Bo3j283kD6T8', {
+      url = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyD3QXuWLXotdtPsh5kedc-Bo3j283kD6T8';
+    }
+    fetch(url, {
         method: 'POST',
         body: JSON.stringify({
           email: enteredEmail,
@@ -34,19 +40,22 @@ const AuthForm = () => {
           'Content-Type': 'application/json'
         }
       }).then(res => {
+        setIsLoading(false);
         if (res.ok) {
-
+            return res.json();
         } else {
           return res.json().then(data => {
             let errMessage = 'Authentication Failed!';
-            if (data && data.error && data.error.message) {
-              errMessage = data.error.message;
-            }
-            alert(errMessage);
+            // if (data && data.error && data.error.message) {
+            //   errMessage = data.error.message;
+            // }
+            
+            throw new Error(errMessage);
           });
         }
-      })
-    }
+      }).then((data)=>{
+        console.log(data);
+      }).catch(err=>{alert(err);});
   }
   return (
     <section className={classes.auth}>
@@ -66,7 +75,8 @@ const AuthForm = () => {
           />
         </div>
         <div className={classes.actions}>
-          <button>{isLogin ? 'Login' : 'create acount'}</button>
+          {!isLoading && <button>{isLogin ? 'Login' : 'create acount'}</button>}
+          {isLoading && <p>loading...</p>}
           <button
             type='button'
             className={classes.toggle}
